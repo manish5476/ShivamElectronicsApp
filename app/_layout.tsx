@@ -1,29 +1,33 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Stack } from "expo-router";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+  return <Stack />;
 }
+// app/_layout.tsx
+// import { Redirect, Slot, SplashScreen } from 'expo-router';
+// import React, { useEffect, useState } from 'react';
+// import { authService } from '../src/api/AuthService';
+
+// SplashScreen.preventAutoHideAsync();
+
+// export default function RootLayout() {
+//   const [isReady, setIsReady] = useState(false);
+//   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+//   useEffect(() => {
+//     const checkAuth = async () => {
+//       const isAuth = await authService.isAuthenticated();
+//       setIsAuthenticated(isAuth);
+//       setIsReady(true);
+//       SplashScreen.hideAsync();
+//     };
+//     checkAuth();
+//   }, []);
+
+//   if (!isReady) return null;
+
+//   if (isAuthenticated === false) return <Redirect href="/login" />;
+//   if (isAuthenticated === true) return <Redirect href="/home" />;
+
+//   return <Slot />;
+// }
