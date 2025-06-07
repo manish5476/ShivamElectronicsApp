@@ -11,6 +11,16 @@ interface AutopopulateResponse<T> {
   statusCode: number;
 }
 
+export interface Customer {
+  id: string;
+  label: string;
+  fullname: string;
+  email: string;
+  cart: {
+    items: any[];
+  };
+}
+
 type AutopopulateModuleData = any;
 
 class AutopopulateService extends BaseApiService {
@@ -42,7 +52,7 @@ class AutopopulateService extends BaseApiService {
     }
 
     // 3. No cache, no pending fetch - initiate new fetch
-    const fetchPromise = this.fetchModuleData(key,"m");
+    const fetchPromise = this.fetchModuleData(key);
     this.pendingFetches.set(key, fetchPromise); // Store the promise
 
     try {
@@ -72,7 +82,7 @@ class AutopopulateService extends BaseApiService {
       return this.pendingFetches.get(key)!;
     }
 
-    const fetchPromise = this.fetchModuleData(key,"m");
+    const fetchPromise = this.fetchModuleData(key);
     this.pendingFetches.set(key, fetchPromise);
 
     try {
@@ -111,7 +121,7 @@ class AutopopulateService extends BaseApiService {
    * @param {string} module The name of the module.
    * @returns {Promise<AutopopulateModuleData[]>} A promise resolving with the fetched data.
    */
-  public async fetchModuleData(module: string,query:string): Promise<AutopopulateModuleData[]> {
+  public async fetchModuleData(module: string): Promise<AutopopulateModuleData[]> {
     try {
       const url = `${this.baseUrl}/v1/master-list/${module}`;
       const response = await this.http.get<AutopopulateResponse<AutopopulateModuleData>>(url);
@@ -122,6 +132,7 @@ class AutopopulateService extends BaseApiService {
       throw error; // Propagate error so consuming code can handle it (e.g., set loading state to false)
     }
   }
+
 
   /**
    * Loads data for all specified modules concurrently, caching the results.
@@ -134,7 +145,6 @@ class AutopopulateService extends BaseApiService {
 
     try {
       await Promise.all(promises);
-      console.log('All autopopulate modules loaded and cached.');
     } catch (error) {
       console.error('Error loading all autopopulate modules:', error);
       // Errors are already handled by individual refreshModuleData calls via appMessageService
