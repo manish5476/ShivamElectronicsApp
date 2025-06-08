@@ -67,7 +67,17 @@ export default function RootLayout() {
             <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
-      />
+      /> 
+      <Drawer.Screen
+        name="customers/create"
+        options={{
+          drawerLabel: "Create Customer",
+          title: "Customers",
+          drawerIcon: ({ color, size }: DrawerIconProps) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
+        }}
+      /> 
       <Drawer.Screen
         name="customers/[id]"
         options={{

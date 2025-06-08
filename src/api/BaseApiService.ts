@@ -1,56 +1,14 @@
-
-import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-// Note: Changed AxiosRequestConfig to InternalAxiosRequestConfig in the import above
-
-import { authService } from './AuthService';
+import { AxiosError } from 'axios';
+import { apiClient } from './ApiClient';
 import { environment } from './config/environment';
 import { errorhandlingService } from './ErrorhandlingService';
 
 class BaseApiService {
-  protected http: AxiosInstance;
+  protected http = apiClient;
   protected baseUrl: string = environment.apiUrl;
 
   constructor() {
-    this.http = axios.create({
-      baseURL: this.baseUrl,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 10000, // 10 seconds timeout
-    });
-
-    // Request Interceptor: Attach token to outgoing requests
-    this.http.interceptors.request.use(
-      // === FIX IS HERE ===
-      // Change config: AxiosRequestConfig to config: InternalAxiosRequestConfig
-      async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
-        const token = await authService.getToken(); // Retrieve token from AuthService
-        if (token) {
-          // In newer Axios versions, config.headers is guaranteed to be an object
-          // so the 'if (!config.headers)' check is often no longer strictly needed
-          // and might even cause type issues if you try to assign {} to it.
-          // Directly assign to config.headers.Authorization.
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error: AxiosError): Promise<AxiosError> => {
-        return Promise.reject(error);
-      }
-    );
-
-    // Response Interceptor: Handle global errors (e.g., 401 Unauthorized)
-    this.http.interceptors.response.use(
-      (response: AxiosResponse): AxiosResponse => response,
-      async (error: AxiosError): Promise<AxiosError> => {
-        if (error.response && error.response.status === 401) {
-          console.warn('Unauthorized request detected. Attempting re-authentication or logout.');
-          await authService.logout(); // Trigger logout logic
-          return Promise.reject(new Error('Unauthorized: Session expired. Please log in again.'));
-        }
-        return Promise.reject(error); // Re-throw the error for specific service handling
-      }
-    );
+    // No need to create new axios instance, using the configured apiClient
   }
 
   /**

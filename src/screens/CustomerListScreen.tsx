@@ -1,6 +1,7 @@
 import { autopopulateService } from '@/src/api/AutopopulateService';
+import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -19,15 +20,24 @@ export default function CustomerListScreen() {
   const navigation = useNavigation();
   const router = useRouter();
 
-  useEffect(() => {
-    autopopulateService.fetchModuleData('customers')
-      .then((data: any) => {
-        setCustomers(data);
-        setFiltered(data);
-      })
-      .catch((error: any) => console.error('Error fetching customers:', error))
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchCustomers = async () => {
+        setLoading(true);
+        try {
+          const data: any = await autopopulateService.fetchModuleData('customers');
+          setCustomers(data);
+          setFiltered(data);
+        } catch (error: any) {
+          console.error('Error fetching customers on focus:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchCustomers();
+    }, [])
+  );
 
   const handleSearch = (text: string) => {
     setSearch(text);

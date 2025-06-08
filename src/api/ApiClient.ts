@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { authService } from './AuthService';
 import { environment } from './config/environment';
 
 console.log('API Base URL:', environment.apiUrl); // Log the base URL
@@ -9,7 +9,7 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // Add timeout 
+  timeout: 30000, // Increased timeout to 30 seconds
 });
 
 // Add request interceptor for auth token and logging
@@ -22,7 +22,7 @@ apiClient.interceptors.request.use(async (config) => {
       headers: config.headers
     });
 
-    const token = await AsyncStorage.getItem('token');
+    const token = await authService.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -43,7 +43,29 @@ apiClient.interceptors.response.use(
     });
     return response;
   },
-  (error) => {
+  async (error) => {
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      console.warn('Unauthorized request detected. Attempting re-authentication or logout.');
+      await authService.logout();
+      return Promise.reject(new Error('Unauthorized: Session expired. Please log in again.'));
+    }
+
+    // Handle timeout
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout - server took too long to respond');
+      return Promise.reject(new Error('Request timeout - please try again'));
+    }
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network Error - No response received:', {
+        message: error.message,
+        code: error.code
+      });
+      return Promise.reject(new Error('Network error - please check your connection'));
+    }
+
     console.error('API Error Details:', {
       url: error.config?.url,
       method: error.config?.method,
@@ -51,8 +73,7 @@ apiClient.interceptors.response.use(
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
-      code: error.code,
-      stack: error.stack
+      code: error.code
     });
     return Promise.reject(error);
   }
